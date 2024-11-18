@@ -29,8 +29,8 @@ for feature in extractor.features:
     for i in range(feature.dim):
         feature_names.append(f"{feature.name}_{i}")
 
-# Perform feature selection to get top 100 features
-skb = SelectKBest(f_classif, k=100)
+# Perform feature selection to get top 50 features
+skb = SelectKBest(f_classif, k=50)
 skb.fit(X_train, y_train)
 X_train_best = skb.transform(X_train)
 X_test_best = skb.transform(X_test)
@@ -50,9 +50,9 @@ from tensorflow.keras.regularizers import l2
 
 # Define the RNN model with additional regularization
 model = Sequential([
-    LSTM(64, input_shape=(100, 1), return_sequences=True, kernel_regularizer=l2(0.001)),
+    LSTM(128, input_shape=(100, 1), return_sequences=True, kernel_regularizer=l2(0.001)),
     Dropout(0.3),
-    LSTM(32, kernel_regularizer=l2(0.001)),
+    LSTM(64, kernel_regularizer=l2(0.001)),
     Dropout(0.3),
     Dense(1, activation='sigmoid')
 ])
@@ -87,4 +87,4 @@ fpr = fp / (fp + tn)  # False Positive Rate
 print(f"True Positive Rate (TPR): {tpr:.4f}")
 print(f"False Positive Rate (FPR): {fpr:.4f}")
 
-model.save_weights('rnn-v2-it1.h5')
+model.save_weights('rnn-v3-it1.h5')

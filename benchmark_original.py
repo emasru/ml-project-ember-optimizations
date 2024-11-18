@@ -3,11 +3,10 @@ dataset_path = './data/ember2018/'
 # ember.create_vectorized_features(dataset_path)
 # ember.create_metadata(dataset_path)
 X_train, y_train, X_test, y_test = ember.read_vectorized_features(dataset_path)
-# metadata_dataframe = ember.read_metadata(dataset_path)
+metadata_dataframe = ember.read_metadata(dataset_path)
 lgbm_model = ember.train_model(dataset_path)
-print(lgbm_model.params)
 
-# lgbm_model.save_model('lgbm_model_it1.txt')
+lgbm_model.save_model('lgbm_model_it1.txt')
 
 # Check the portable version of WinDirStat
 # windirstat_data = open("./windirstat_portable.exe", "rb").read()
@@ -18,10 +17,7 @@ print(lgbm_model.params)
 import numpy as np
 from sklearn.metrics import confusion_matrix
 
-# Generate predictions (continuous values)
-y_pred = lgbm_model.predict(X_test)
-
-# Define thresholding function to map predictions to discrete classes
+# Example thresholding to map continuous predictions to discrete classes
 def classify_prediction(pred):
     if pred <= -0.5:
         return -1
@@ -33,9 +29,7 @@ def classify_prediction(pred):
 # Apply thresholding to predictions
 y_pred_discrete = np.array([classify_prediction(pred) for pred in y_pred])
 
-# Step 4: Evaluate the Model Using Confusion Matrix and Compute TPR/FPR
-
-# Compute confusion matrix
+# Compute confusion matrix with the discrete predictions
 conf_matrix = confusion_matrix(y_test, y_pred_discrete, labels=[-1, 0, 1])
 
 # Calculate TPR and FPR for each class
@@ -55,7 +49,3 @@ for idx, class_label in enumerate([-1, 0, 1]):
 for class_label in [-1, 0, 1]:
     print(f"Class {class_label}: TPR = {tpr[class_label]:.2f}, FPR = {fpr[class_label]:.2f}")
 
-# print("Feature Importance Scores:")
-# feature_importances = lgbm_model.feature_importance(importance_type='split')  # 'split' for split count, 'gain' for average gain
-# for i, importance in enumerate(feature_importances):
-#    print(f"Feature {i}: {importance}")

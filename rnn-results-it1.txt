@@ -1,0 +1,11 @@
+Epoch 1/50
+7500/7500 [==============================] - 160s 21ms/step - loss: 0.4022 - accuracy: 0.8205 - val_loss: 0.4095 - val_accuracy: 0.8211
+Epoch 2/50
+7500/7500 [==============================] - 159s 21ms/step - loss: 0.3165 - accuracy: 0.8678 - val_loss: 0.3620 - val_accuracy: 0.8283
+Epoch 3/50
+7500/7500 [==============================] - 160s 21ms/step - loss: 0.2811 - accuracy: 0.8841 - val_loss: 0.3635 - val_accuracy: 0.8524
+Epoch 4/50
+7500/7500 [==============================] - 160s 21ms/step - loss: 0.2613 - accuracy: 0.8941 - val_loss: 0.3667 - val_accuracy: 0.8582
+Test Accuracy: 0.8317
+True Positive Rate (TPR): 0.8686
+False Positive Rate (FPR): 0.2053

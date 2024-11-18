@@ -1,15 +1,17 @@
 import ember
-from ember import features
 from sklearn.feature_selection import SelectKBest, f_classif
+from sklearn.preprocessing import StandardScaler
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Conv1D, MaxPooling1D, LSTM, Dense, Dropout, Flatten
+from tensorflow.keras.regularizers import l2
+from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.optimizers import Adam
 import numpy as np
 import pandas as pd
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import LSTM, Dense, Dropout
-from tensorflow.keras.optimizers import Adam
-from sklearn.preprocessing import StandardScaler
+from ember import features
 from sklearn.metrics import accuracy_score
 
-# Initialize PEFeatureExtractor
+# Initialize PEFeatureExtractor to get feature names
 extractor = features.PEFeatureExtractor()
 
 # Load the EMBER dataset
@@ -29,8 +31,8 @@ for feature in extractor.features:
     for i in range(feature.dim):
         feature_names.append(f"{feature.name}_{i}")
 
-# Perform feature selection to get top 100 features
-skb = SelectKBest(f_classif, k=100)
+# Select the top 150 most discriminative features
+skb = SelectKBest(f_classif, k=150)
 skb.fit(X_train, y_train)
 X_train_best = skb.transform(X_train)
 X_test_best = skb.transform(X_test)
@@ -40,17 +42,19 @@ scaler = StandardScaler()
 X_train_best = scaler.fit_transform(X_train_best)
 X_test_best = scaler.transform(X_test_best)
 
-# Reshape data for RNN input (samples, timesteps, features)
-# Here, we treat each feature as a timestep for the RNN
-X_train_rnn = X_train_best.reshape(-1, 100, 1)
-X_test_rnn = X_test_best.reshape(-1, 100, 1)
+# Reshape data for CNN input (samples, timesteps, features)
+X_train_rnn = X_train_best.reshape(-1, 150, 1)
+X_test_rnn = X_test_best.reshape(-1, 150, 1)
 
-from tensorflow.keras.callbacks import EarlyStopping
-from tensorflow.keras.regularizers import l2
-
-# Define the RNN model with additional regularization
+# Build the Hybrid CNN + LSTM model
 model = Sequential([
-    LSTM(64, input_shape=(100, 1), return_sequences=True, kernel_regularizer=l2(0.001)),
+    Conv1D(64, kernel_size=3, activation='relu', input_shape=(150, 1), kernel_regularizer=l2(0.001)),
+    MaxPooling1D(pool_size=2),
+    Dropout(0.3),
+    Conv1D(32, kernel_size=3, activation='relu', kernel_regularizer=l2(0.001)),
+    MaxPooling1D(pool_size=2),
+    Dropout(0.3),
+    LSTM(64, return_sequences=True, kernel_regularizer=l2(0.001)),
     Dropout(0.3),
     LSTM(32, kernel_regularizer=l2(0.001)),
     Dropout(0.3),
@@ -58,17 +62,16 @@ model = Sequential([
 ])
 
 # Compile the model
-model.compile(optimizer=Adam(learning_rate=0.001), loss='binary_crossentropy', metrics=['accuracy'])
+model.compile(optimizer=Adam(learning_rate=0.0001), loss='binary_crossentropy', metrics=['accuracy'])
 
-# Early stopping callback
-early_stopping = EarlyStopping(monitor='val_loss', patience=2, restore_best_weights=True)
+# Early stopping callback to prevent overfitting
+early_stopping = EarlyStopping(monitor='val_loss', min_delta=0.000001, patience=3, restore_best_weights=True)
 
 # Train the model with early stopping
-model.fit(X_train_rnn, y_train, epochs=50, batch_size=64, validation_split=0.2, callbacks=[early_stopping])
+history = model.fit(X_train_rnn, y_train, epochs=50, batch_size=64, validation_split=0.2, callbacks=[early_stopping])
 
 # Evaluate the model
-y_pred = model.predict(X_test_rnn)
-y_pred = (y_pred > 0.5).astype(int).reshape(-1)
+y_pred = (model.predict(X_test_rnn) > 0.5).astype(int).reshape(-1)
 accuracy = accuracy_score(y_test, y_pred)
 print(f"Test Accuracy: {accuracy:.4f}")
 
@@ -86,5 +89,3 @@ fpr = fp / (fp + tn)  # False Positive Rate
 
 print(f"True Positive Rate (TPR): {tpr:.4f}")
 print(f"False Positive Rate (FPR): {fpr:.4f}")
-
-model.save_weights('rnn-v2-it1.h5')
