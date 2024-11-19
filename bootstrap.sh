@@ -13,5 +13,6 @@ echo 'Creating a Conda environment with Python 3.6.15'
 conda config --set auto_activate_base false
 conda config --add channels conda-forge
 conda create -n "ember-env-test" -c conda-forge python=3.6.15
+echo 'Running conda init. Will require sudo'
 conda init
 echo 'You now have to close your current shell, open a new one and run setup.sh'
