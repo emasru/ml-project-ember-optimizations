@@ -1,23 +1,27 @@
 import ember
-dataset_path = './data/ember2018/'
-# ember.create_vectorized_features(dataset_path)
-# ember.create_metadata(dataset_path)
-X_train, y_train, X_test, y_test = ember.read_vectorized_features(dataset_path)
-metadata_dataframe = ember.read_metadata(dataset_path)
-lgbm_model = ember.train_model(dataset_path)
-
-lgbm_model.save_model('lgbm_model_it1.txt')
-
-# Check the portable version of WinDirStat
-# windirstat_data = open("./windirstat_portable.exe", "rb").read()
-# print(round(ember.predict_sample(lgbm_model, windirstat_data), 2))
-# wannacry_data = open("./wannacry.exe", "rb").read()
-# print(round(ember.predict_sample(lgbm_model, wannacry_data), 2))
-
 import numpy as np
 from sklearn.metrics import confusion_matrix
 
-# Example thresholding to map continuous predictions to discrete classes
+dataset_path = './data/ember2018/'
+X_train, y_train, X_test, y_test = ember.read_vectorized_features(dataset_path)
+
+params = {
+    'objective': 'binary',
+    'metric': 'auc',
+    'boosting_type': 'gbdt',
+    'num_leaves': 1024,
+    'learning_rate': 0.05,
+    'feature_fraction': 0.5,
+    'num_iterations': 500,
+    'bagging_fraction': 0.5
+}
+
+lgbm_model = ember.train_model(dataset_path, params=params)
+
+# Generate predictions (continuous values)
+y_pred = lgbm_model.predict(X_test)
+
+
 def classify_prediction(pred):
     if pred <= -0.5:
         return -1
@@ -29,7 +33,9 @@ def classify_prediction(pred):
 # Apply thresholding to predictions
 y_pred_discrete = np.array([classify_prediction(pred) for pred in y_pred])
 
-# Compute confusion matrix with the discrete predictions
+# Evaluate the Model Using Confusion Matrix and Compute TPR/FPR
+
+# Compute confusion matrix
 conf_matrix = confusion_matrix(y_test, y_pred_discrete, labels=[-1, 0, 1])
 
 # Calculate TPR and FPR for each class
@@ -48,4 +54,3 @@ for idx, class_label in enumerate([-1, 0, 1]):
 # Print TPR and FPR for each class
 for class_label in [-1, 0, 1]:
     print(f"Class {class_label}: TPR = {tpr[class_label]:.2f}, FPR = {fpr[class_label]:.2f}")
-

@@ -1,1 +1,0 @@
-cat parameter_grid_search_output.txt | grep "score" | grep "CV" | sort -t'=' -k6,6n
