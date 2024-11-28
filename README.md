@@ -1,6 +1,6 @@
 # EMBER dataset optimizations
 
-This repository contains the code used in the submission of the paper "Exploring Optimizations of the EMBER Dataset Baseline Model". The original repository for EMBER can be found [here](https://github.com/elastic/ember).
+This repository contains the code used in the submission of the paper ["Exploring Optimizations of the EMBER Dataset Baseline Model"](https://github.com/emasru/ml-project-ember-optimizations/blob/main/EMBER.pdf). The original repository for EMBER can be found [here](https://github.com/elastic/ember).
 
 ## Setup
 
